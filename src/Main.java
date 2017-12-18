@@ -1,3 +1,8 @@
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+// TODO BETTER METHOD IS ARR_POS = Y * WIDTH + X;
+
 public class Main {
 
     public static char[] board = "/////////".toCharArray();
@@ -5,12 +10,32 @@ public class Main {
     public static String p2 = "placeholder";
     public static String lastPick;
 
+    /*
+    public static int[] solve0 = {1,2,3};
+    public static int[] solve1 = {3,4,5};
+    public static int[] solve2 = {6,7,8};
+    public static int[] solve3 = {0,3,6};
+    public static int[] solve4 = {1,4,7};
+    public static int[] solve5 = {2,5,8};
+    public static int[] solve6 = {0,4,8};
+    public static int[] solve7 = {2,4,6};
+    */
+
+
+    public static int[] allSolves = {1,2,3,3,4,5,6,7,8,0,3,6,1,4,7,2,5,8,0,4,8,2,4,6};
+
     public static void main(String[] args) throws InterruptedException {
 
+        //LitEngine.debugShowPressedKeys();
         LitEngine.debugDisableSplash();
         LitEngine.start("clear");
 
+        Doodles.Pride(0,0);
+        Thread.sleep(500);
+        LitEngine.clear("clear");
 
+
+        keyHandler();
 
         draw();
 
@@ -23,6 +48,8 @@ public class Main {
 
         draw();
 
+
+
         if(Math.random() > 0.5){
             // Player 1 starts
             pick(p1);
@@ -33,17 +60,46 @@ public class Main {
         }
     }
 
-    public static void check(){
+    public static void check() throws InterruptedException {
 
+        // Main array with all the solves "allSolves"
+
+        for(int i = 0; i < allSolves.length; i+=3){
+            if(board[allSolves[i]] == board[allSolves[i+1]] && board[allSolves[i]] == board[allSolves[i+2]] && board[allSolves[i]] != '/'){
+                LitEngine.clearNoRender("border");
+                String winner;
+                if(board[allSolves[i]] == 'O'){
+                    winner = p1;
+                    Doodles.O_WINNER(0,0);
+
+                } else {
+                    winner = p2;
+                    Doodles.X_WINNER(0,0);
+                }
+
+                LitEngine.printAnimatedCentered(winner + " won! (Press R to restart)", 10);
+                boolean restart = false;
+                while(!restart){
+                    Thread.sleep(10);
+                }
+
+
+
+            }
+
+        }
 
 
     }
 
 
+    public static int cursor_x;
+    public static int cursor_y;
+    public static String pickingPlayer;
 
     public static void draw() throws InterruptedException {
 
-        LitEngine.clear("clear");
+        LitEngine.clearNoRender("clear");
         drawBoardLayout();
 
         // Draw out picks
@@ -97,29 +153,106 @@ public class Main {
             x = x +2;
         }
 
+        // Draw cursor
+
+        String cursor_char = "?";
+        if(pickingPlayer == p1){
+            cursor_char = "O";
+        }
+
+        if(pickingPlayer == p2){
+            cursor_char = "X";
+        }
+
+        if(drawCursor){
+            LitEngine.printNoRender(1, 19, "It's your turn, " + pickingPlayer +  ".");
+            LitEngine.drawNoRenderColor(cursor_x, cursor_y, cursor_char, 1);
+        }
+
+
         LitEngine.render();
 
     }
 
+public static  int speed = 2;
+
+    public static void keyHandler(){
+        LitEngine.frame.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+                if(e.getKeyCode() == 10) choosen = true;
+
+                if(e.getKeyCode() == (38)) cursor_y -= speed;
+                if(e.getKeyCode() == (40)) cursor_y += speed;
+                if(e.getKeyCode() == (37)) cursor_x -= speed;
+                if(e.getKeyCode() == (39)) cursor_x += speed;
+
+                try {
+                    draw();
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
+    }
+
+    public static boolean drawCursor = false;
+
+    public static  boolean choosen = false;
 
     public static void pick(String player) throws InterruptedException {
         lastPick = player;
+        pickingPlayer = player;
         LitEngine.print(1, 19, "It's your turn, " + player +  ".");
-        String input = LitEngine.inputString();
 
-        char charRow = input.charAt(0);
-        int intRow = Character.getNumericValue(input.charAt(1));
+
+
+
+        choosen = false;
+
+        // 5, 14
+        cursor_x = 5;
+        cursor_y = 14;
+
+
+        drawCursor = true;
+        draw();
+
+        while(!choosen){
+            Thread.sleep(50);
+        }
+
+        drawCursor = false;
+
 
         int boardPos;
+        boardPos = 0;
+        boardPos = (cursor_y - 10) / 2;
+        if(boardPos == 1) boardPos = -1;
+        if(boardPos == 2) boardPos = 2;
+        if(boardPos == 3) boardPos = 5;
 
-        if(charRow == 'A' || charRow == 'a'){
-            boardPos = intRow - 1;
-        } else if(charRow == 'B' || charRow == 'b'){
-            boardPos = intRow + 2;
-        } else if(charRow == 'C' || charRow == 'c'){
-            boardPos = intRow + 5;
-        } else {
-            // TODO Add error
+
+        int adder = 0;
+        if(cursor_x == 3) adder = 1;
+        if(cursor_x == 5) adder = 2;
+        if(cursor_x == 7) adder = 3;
+
+        System.out.println(boardPos + " * " + adder +" - 2");
+        boardPos = adder + boardPos;
+
+
+        // Check if valid
+        if(board[boardPos] != '/'){
             pick(player);
             return;
         }
@@ -145,6 +278,18 @@ public class Main {
             pick(p1);
             return;
         }
+
+
+
+
+
+/*
+
+*/
+
+
+
+
 
     }
 
@@ -214,7 +359,7 @@ public class Main {
         LitEngine.drawNoRender(1, 12, "A");
         LitEngine.drawNoRender(1, 14, "B");
         LitEngine.drawNoRender(1, 16, "C");
-        LitEngine.render();
+        //LitEngine.render();
 
 
 
